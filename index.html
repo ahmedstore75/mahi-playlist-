@@ -80,6 +80,7 @@
             font-weight: 600;
             transition: 0.3s;
             white-space: nowrap;
+            cursor: pointer;
         }
 
         .nav-item i {
@@ -174,7 +175,7 @@
             right: 15px;
             z-index: 10;
             pointer-events: none;
-            transition: opacity 0.5s ease-in-out; /* স্মুথলি গায়েব হওয়ার অ্যানিমেশন */
+            transition: opacity 0.5s ease-in-out;
             opacity: 1;
         }
 
@@ -414,21 +415,21 @@
 
     <div class="app-container">
         
-        <!-- SIDEBAR NAVIGATION -->
+        <!-- SIDEBAR NAVIGATION (মেনু বাটনে ক্লিক লজিক যুক্ত করা হয়েছে) -->
         <aside class="sidebar">
             <div class="logo-section">
                 <h1>SA IPTV <br><span>BD LIVE</span></h1>
             </div>
             
             <nav class="nav-menu">
-                <a href="#" class="nav-item active"><i class="fa-solid fa-tv"></i> LIVE TV</a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-heart"></i> FAVORITES</a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-film"></i> MOVIES</a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-clapperboard"></i> SERIES</a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-trophy"></i> SPORTS</a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-child"></i> KIDS</a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-radio"></i> RADIO</a>
-                <a href="#" class="nav-item"><i class="fa-solid fa-gear"></i> SETTINGS</a>
+                <a onclick="selectSidebarCategory('ALL', this)" class="nav-item active" id="menu-all"><i class="fa-solid fa-tv"></i> LIVE TV</a>
+                <a onclick="selectSidebarCategory('FAVORITES', this)" class="nav-item"><i class="fa-solid fa-heart"></i> FAVORITES</a>
+                <a onclick="selectSidebarCategory('MOVIES', this)" class="nav-item"><i class="fa-solid fa-film"></i> MOVIES</a>
+                <a onclick="selectSidebarCategory('SERIES', this)" class="nav-item"><i class="fa-solid fa-clapperboard"></i> SERIES</a>
+                <a onclick="selectSidebarCategory('SPORTS', this)" class="nav-item" id="menu-sports"><i class="fa-solid fa-trophy"></i> SPORTS</a>
+                <a onclick="selectSidebarCategory('KIDS', this)" class="nav-item"><i class="fa-solid fa-child"></i> KIDS</a>
+                <a onclick="selectSidebarCategory('RADIO', this)" class="nav-item"><i class="fa-solid fa-radio"></i> RADIO</a>
+                <a onclick="selectSidebarCategory('SETTINGS', this)" class="nav-item"><i class="fa-solid fa-gear"></i> SETTINGS</a>
             </nav>
 
             <!-- সোশ্যাল লিঙ্ক সেকশন -->
@@ -474,10 +475,10 @@
                     </div>
                     
                     <div class="category-tags" id="category-buttons-container">
-                        <button class="cat-btn active" onclick="selectCategory('ALL', this)">ALL</button>
-                        <button class="cat-btn" onclick="selectCategory('NEWS', this)">NEWS</button>
-                        <button class="cat-btn" onclick="selectCategory('ENTERTAINMENT', this)">ENTERTAINMENT</button>
-                        <button class="cat-btn" onclick="selectCategory('SPORTS', this)">SPORTS</button>
+                        <button class="cat-btn active" id="btn-all" onclick="selectCategory('ALL', this)">ALL</button>
+                        <button class="cat-btn" id="btn-news" onclick="selectCategory('NEWS', this)">NEWS</button>
+                        <button class="cat-btn" id="btn-entertainment" onclick="selectCategory('ENTERTAINMENT', this)">ENTERTAINMENT</button>
+                        <button class="cat-btn" id="btn-sports" onclick="selectCategory('SPORTS', this)">SPORTS</button>
                     </div>
                 </section>
 
@@ -500,7 +501,7 @@
     <!-- JAVASCRIPT FOR DYNAMIC M3U, FILTER & STREAMING -->
     <script>
         let currentSelectedCategory = "ALL"; 
-        let badgeTimeout = null; // টাইমারের জন্য ভেরিয়েবল
+        let badgeTimeout = null;
 
         function updateClock() {
             const now = new Date();
@@ -515,7 +516,7 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        const m3uUrl = "https://raw.githubusercontent.com/ahmedstore75/Iptvbdlive/refs/heads/main/mixiptvchannel.m3u";
+        const m3uUrl =" https://raw.githubusercontent.com/ahmedstore75/Iptvbdlive/refs/heads/main/mixiptvchannel.m3u";
         let allChannels = [];
 
         async function loadM3UPlaylist() {
@@ -570,11 +571,44 @@
             }
         }
 
+        // সাইডবার মেনু থেকে ক্যাটাগরি পরিবর্তনের লজিক
+        function selectSidebarCategory(categoryName, element) {
+            // সাইডবারের সব আইটেম থেকে একটিভ ক্লাস রিমুভ করা
+            const menuItems = document.querySelectorAll('.nav-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+
+            // ক্যাটাগরি সেকশনের বাটনও যেন মিল রেখে হাইলাইট হয়
+            const catButtons = document.querySelectorAll('.cat-btn');
+            catButtons.forEach(btn => btn.classList.remove('active'));
+
+            if(categoryName === 'SPORTS') {
+                const sportsBtn = document.getElementById('btn-sports');
+                if(sportsBtn) sportsBtn.classList.add('active');
+            } else if(categoryName === 'ALL') {
+                const allBtn = document.getElementById('btn-all');
+                if(allBtn) allBtn.classList.add('active');
+            }
+
+            currentSelectedCategory = categoryName.toUpperCase();
+            filterChannels();
+        }
+
         function selectCategory(categoryName, element) {
             currentSelectedCategory = categoryName.toUpperCase();
             const buttons = document.querySelectorAll('.cat-btn');
             buttons.forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
+
+            // সাইডবার মেনুর অ্যাক্টিভ ক্লাসও সিঙ্ক করা
+            const menuItems = document.querySelectorAll('.nav-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            if(categoryName === 'SPORTS') {
+                document.getElementById('menu-sports').classList.add('active');
+            } else if(categoryName === 'ALL') {
+                document.getElementById('menu-all').classList.add('active');
+            }
+
             filterChannels();
         }
 
@@ -628,13 +662,10 @@
             const badgeOverlay = document.getElementById('player-badge-overlay');
             document.getElementById('current-channel-title').innerText = name;
 
-            // চ্যানেল পরিবর্তনের সাথে সাথে লেখাটি আবার দৃশ্যমান করা
             badgeOverlay.style.opacity = "1";
 
-            // আগের টাইমার ক্লিয়ার করা (যদি থাকে)
             if (badgeTimeout) clearTimeout(badgeTimeout);
 
-            // ৩ সেকেন্ড (৩০০০ মিলিসেকেন্ড) পর লেখাটি মিলিয়ে যাওয়ার টাইমার
             badgeTimeout = setTimeout(() => {
                 badgeOverlay.style.opacity = "0";
             }, 3000);
