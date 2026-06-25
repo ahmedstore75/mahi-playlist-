@@ -19,7 +19,7 @@
         body {
             background-color: #0b0e14;
             color: #ffffff;
-            overflow: hidden; /* পুরো পেজের মেইন স্ক্রলবার বন্ধ */
+            overflow: hidden; 
         }
 
         .app-container {
@@ -43,7 +43,6 @@
             flex-shrink: 0;
         }
 
-        /* লোগো সেকশন */
         .logo-section h1 {
             font-size: 16px;
             color: #ffffff;
@@ -92,7 +91,6 @@
             color: #ffffff;
         }
 
-        /* সোশ্যাল লিঙ্ক স্টাইল */
         .social-links {
             display: flex;
             gap: 15px;
@@ -124,7 +122,6 @@
             height: 100vh;
         }
 
-        /* টপ হেডার (ঘড়ি ও তারিখ) */
         .top-header {
             display: flex;
             justify-content: flex-end;
@@ -295,11 +292,18 @@
             cursor: pointer;
             transition: 0.3s;
             overflow: hidden;
+            position: relative;
         }
 
         .channel-card:hover {
             background-color: #1e2330;
             border-color: #ff0022;
+        }
+
+        /* বর্তমানে যে চ্যানেলটি প্লে হচ্ছে তার স্পেশাল ডিজাইন */
+        .channel-card.currently-playing {
+            border-color: #ff0022;
+            background-color: #1e1115;
         }
 
         .channel-thumb {
@@ -341,6 +345,16 @@
             color: #ff0022;
             font-size: 14px;
             flex-shrink: 0;
+        }
+
+        .playing-badge-text {
+            font-size: 9px;
+            background: #ff0022;
+            color: #fff;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+            text-transform: uppercase;
         }
 
         .loading-text {
@@ -505,7 +519,7 @@
     <script>
         let currentSelectedCategory = "ALL"; 
         let badgeTimeout = null;
-        let isFirstLoad = true; // প্রথমবার অটো-প্লে ট্র্যাক করার জন্য ফ্ল্যাগ
+        let currentPlayingUrl = ""; // বর্তমানে কোন URL চলছে তা ট্র্যাক করার গ্লোবাল ভ্যারিয়েবল
 
         function updateClock() {
             const now = new Date();
@@ -571,10 +585,9 @@
             
             filterChannels(); 
 
-            // শুধুমাত্র প্রথমবার অ্যাপ লোড হলে প্রথম চ্যানেলটি অটো-প্লে হবে
-            if (isFirstLoad && allChannels.length > 0) {
+            // একদম প্রথমে অ্যাপ রান করলে কেবল প্রথম চ্যানেলটি প্লে হবে
+            if (allChannels.length > 0 && currentPlayingUrl === "") {
                 playLiveStream(allChannels[0].url, allChannels[0].name);
-                isFirstLoad = false; 
             }
         }
 
@@ -591,7 +604,7 @@
             const matchedBtn = Array.from(catButtons).find(btn => btn.getAttribute('data-cat') === categoryName);
             if(matchedBtn) matchedBtn.classList.add('active');
 
-            filterChannels(); // এখানে এখন আর ভিডিও রিস্টার্ট হবে না
+            filterChannels(); // কেবল নিচের গ্রিড চেঞ্জ করবে, মেইন প্লেয়ারকে টাচ করবে না।
         }
 
         function filterChannels() {
@@ -621,10 +634,17 @@
             channels.forEach((channel, index) => {
                 const serialNum = String(index + 1).padStart(2, '0');
                 const card = document.createElement('div');
-                card.className = 'channel-card';
+                
+                // যদি এই কার্ডের URL বর্তমানে চলতে থাকা URL এর সাথে মিলে যায়
+                const isPlaying = (channel.url === currentPlayingUrl);
+                
+                card.className = `channel-card ${isPlaying ? 'currently-playing' : ''}`;
                 card.onclick = () => playLiveStream(channel.url, channel.name);
 
                 const logoHtml = channel.logo ? `<img src="${channel.logo}" alt="" class="channel-thumb">` : `<div class="channel-thumb"><i class="fa-solid fa-tv"></i></div>`;
+                
+                // চলমান চ্যানেলের ডানপাশে প্লে আইকনের বদলে NOW PLAYING টেক্সট দেখাবে
+                const statusIconHtml = isPlaying ? `<span class="playing-badge-text">LIVE</span>` : `<i class="fa-solid fa-play play-icon"></i>`;
 
                 card.innerHTML = `
                     ${logoHtml}
@@ -632,7 +652,7 @@
                         <h4>${serialNum} | ${channel.name}</h4>
                         <p class="cat-name">${channel.group}</p>
                     </div>
-                    <i class="fa-solid fa-play play-icon"></i>
+                    ${statusIconHtml}
                 `;
                 container.appendChild(card);
             });
@@ -653,16 +673,19 @@
         };
 
         function playLiveStream(url, name) {
+            // যদি ব্যবহারকারী একই চ্যানেলে আবার ক্লিক করে, তবে রিলোড না করে চলতে দেওয়া হবে
+            if (currentPlayingUrl === url && hlsPlayer) {
+                return; 
+            }
+
+            currentPlayingUrl = url; // বর্তমানে চলমান মেমোরি আপডেট
+
             const badgeOverlay = document.getElementById('player-badge-overlay');
             document.getElementById('current-channel-title').innerText = name;
 
             badgeOverlay.style.opacity = "1";
-
             if (badgeTimeout) clearTimeout(badgeTimeout);
-
-            badgeTimeout = setTimeout(() => {
-                badgeOverlay.style.opacity = "0";
-            }, 3000);
+            badgeTimeout = setTimeout(() => { badgeOverlay.style.opacity = "0"; }, 3000);
 
             video.muted = false;
             video.volume = 1.0;
@@ -675,9 +698,7 @@
                 hlsPlayer.attachMedia(video);
                 
                 hlsPlayer.on(Hls.Events.MANIFEST_PARSED, function() {
-                    video.play().catch(() => {
-                        console.log("Autoplay prevented.");
-                    });
+                    video.play().catch(() => { console.log("Autoplay prevented."); });
                 });
 
                 hlsPlayer.on(Hls.Events.ERROR, function (event, data) {
@@ -702,6 +723,13 @@
                     video.play();
                 });
             }
+
+            // চ্যানেল গ্রিডে 'Currently Playing' এর লাল বর্ডার আপডেট করার জন্য কল করা হলো
+            const cards = document.querySelectorAll('.channel-card');
+            cards.forEach(card => card.classList.remove('currently-playing'));
+            
+            // বর্তমান লিস্ট রি-রেন্ডার করে স্ট্যাটাস আপডেট করা
+            filterChannels();
         }
 
         window.onload = loadM3UPlaylist;
