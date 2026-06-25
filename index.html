@@ -505,6 +505,7 @@
     <script>
         let currentSelectedCategory = "ALL"; 
         let badgeTimeout = null;
+        let isFirstLoad = true; // প্রথমবার অটো-প্লে ট্র্যাক করার জন্য ফ্ল্যাগ
 
         function updateClock() {
             const now = new Date();
@@ -567,10 +568,13 @@
                     }
                 }
             }
+            
             filterChannels(); 
 
-            if (allChannels.length > 0) {
+            // শুধুমাত্র প্রথমবার অ্যাপ লোড হলে প্রথম চ্যানেলটি অটো-প্লে হবে
+            if (isFirstLoad && allChannels.length > 0) {
                 playLiveStream(allChannels[0].url, allChannels[0].name);
+                isFirstLoad = false; 
             }
         }
 
@@ -587,7 +591,7 @@
             const matchedBtn = Array.from(catButtons).find(btn => btn.getAttribute('data-cat') === categoryName);
             if(matchedBtn) matchedBtn.classList.add('active');
 
-            filterChannels();
+            filterChannels(); // এখানে এখন আর ভিডিও রিস্টার্ট হবে না
         }
 
         function filterChannels() {
@@ -637,16 +641,15 @@
         const video = document.getElementById('video');
         let hlsPlayer = null;
 
-        // অগ্রিম ম্যাক্সিমাম ডাটা লোড করার জন্য হাই-বাফার কনফিগারেশন 
         const aggressiveBufferConfig = {
             enableWorker: true,
-            maxBufferLength: 90,                 // ইন্টারনেট ভালো থাকলে টানা ৯০ সেকেন্ডের ভিডিও অগ্রিম লোড করে রাখবে!
-            maxMaxBufferLength: 120,             // সর্বোচ্চ ১২০ সেকেন্ড (২ মিনিট) পর্যন্ত বাফার জমা করতে পারবে
-            maxBufferSize: 150 * 1024 * 1024,    // ব্রাউজার মেমোরিতে ১৫০ মেগাবাইট পর্যন্ত ভিডিও ডাটা ক্যাশ রাখার অনুমতি
-            liveSyncDuration: 10.0,              // লাইভ ব্রডকাস্ট থেকে ১০ সেকেন্ড পেছনে স্টার্ট হবে, যাতে বড় বাফার তৈরি হতে পারে
-            liveMaxLatencyDuration: 20.0,        // ২০ সেকেন্ড পর্যন্ত লেটেন্সি টলারেন্স (বাফারিং জমানোর জন্য অত্যন্ত জরুরী)
-            progressive: true,                   // ডাটা ক্রমান্বয়ে দ্রুত ডাউনলোড করতে সাহায্য করবে
-            backBufferLength: 30                 // পেছনের ৩০ সেকেন্ডের ভিডিও মেমোরিতে রাখবে যাতে রিওয়াইন্ড হলে বাফারিং না হয়
+            maxBufferLength: 90,                 
+            maxMaxBufferLength: 120,             
+            maxBufferSize: 150 * 1024 * 1024,    
+            liveSyncDuration: 10.0,              
+            liveMaxLatencyDuration: 20.0,        
+            progressive: true,                   
+            backBufferLength: 30                 
         };
 
         function playLiveStream(url, name) {
@@ -667,7 +670,6 @@
             if (hlsPlayer) hlsPlayer.destroy();
 
             if (Hls.isSupported()) {
-                // নতুন অ্যাগ্রেসিভ বাফার কনফিগারেশন যোগ করা হলো
                 hlsPlayer = new Hls(aggressiveBufferConfig);
                 hlsPlayer.loadSource(url);
                 hlsPlayer.attachMedia(video);
@@ -678,20 +680,16 @@
                     });
                 });
 
-                // স্মার্ট নেটওয়ার্ক ডাউন ও বাফার রিকভারি
                 hlsPlayer.on(Hls.Events.ERROR, function (event, data) {
                     if (data.fatal) {
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
-                                console.log("Network down. Trying to reconnect...");
                                 hlsPlayer.startLoad();
                                 break;
                             case Hls.ErrorTypes.MEDIA_ERROR:
-                                console.log("Media stall detected. Recovering...");
                                 hlsPlayer.recoverMediaError();
                                 break;
                             default:
-                                console.log("Critical Error. Restarting stream...");
                                 playLiveStream(url, name);
                                 break;
                         }
