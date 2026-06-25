@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SA IPTV BD LIVE</title>
-    <!-- Font Awesome Icons (Reliable CDN for GitHub) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Hls.js Library for M3U Streaming -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     
     <style>
@@ -416,7 +414,6 @@
 
     <div class="app-container">
         
-        <!-- SIDEBAR NAVIGATION -->
         <aside class="sidebar">
             <div class="logo-section">
                 <h1>SA IPTV <br><span>BD LIVE</span></h1>
@@ -438,7 +435,6 @@
                 <a onclick="syncCategory('Favorites', this)" class="nav-item" data-cat="Favorites"><i class="fa-solid fa-heart"></i> FAVORITES</a>
             </nav>
 
-            <!-- সোশ্যাল লিঙ্ক সেকশন -->
             <div class="social-links">
                 <a href="https://www.facebook.com/ahmed.bd.fb" target="_blank"><i class="fa-brands fa-facebook"></i></a>
                 <a href="https://telegram.org" target="_blank"><i class="fa-brands fa-telegram"></i></a>
@@ -446,10 +442,8 @@
             </div>
         </aside>
 
-        <!-- MAIN CONTENT AREA -->
         <main class="main-content">
             
-            <!-- TOP BAR -->
             <header class="top-header">
                 <div class="time-widget">
                     <i class="fa-regular fa-clock" style="color: #ff0022; margin-right: 5px;"></i> <span id="clock">--:-- --</span><br>
@@ -457,7 +451,6 @@
                 </div>
             </header>
 
-            <!-- VIDEO PLAYER -->
             <section class="player-container">
                 <div class="video-wrapper">
                     <div class="player-overlay-top" id="player-badge-overlay">
@@ -467,10 +460,8 @@
                 </div>
             </section>
 
-            <!-- স্ক্রলেবল কন্টেন্ট এরিয়া -->
             <div class="scrollable-content-area">
                 
-                <!-- CATEGORIES & SEARCH -->
                 <section class="category-section">
                     <div class="cat-header">
                         <h3>Categories</h3>
@@ -497,12 +488,10 @@
                     </div>
                 </section>
 
-                <!-- CHANNELS GRID -->
                 <section class="channels-grid" id="channels-container">
                     <div class="loading-text"><i class="fa-solid fa-spinner fa-spin"></i> Loading channels...</div>
                 </section>
 
-                <!-- FOOTER -->
                 <footer class="app-footer">
                     <p>© 2026 SA IPTV BD LIVE</p>
                     <p>Built with <span style="color: red;">&hearts;</span></p>
@@ -513,7 +502,6 @@
         </main>
     </div>
 
-    <!-- JAVASCRIPT FOR DYNAMIC M3U, FILTER & STREAMING -->
     <script>
         let currentSelectedCategory = "ALL"; 
         let badgeTimeout = null;
@@ -586,7 +574,6 @@
             }
         }
 
-        // স্মার্ট গ্লোবাল সিঙ্ক ফাংশন
         function syncCategory(categoryName, element) {
             currentSelectedCategory = categoryName;
 
@@ -603,7 +590,6 @@
             filterChannels();
         }
 
-        // রিয়েলটাইম ফাজি বা ইনক্লুসিভ ক্যাটাগরি ফিল্টারিং (ইমোজি ফিক্সড)
         function filterChannels() {
             const searchQuery = document.getElementById('search').value.toLowerCase();
             const filtered = allChannels.filter(channel => {
@@ -611,7 +597,6 @@
                 if (currentSelectedCategory === "ALL") {
                     return matchesSearch;
                 } else {
-                    // এটি ইমোজি বাদ দিয়ে শুধু লেখা ম্যাচ করবে (যেমন: '⚽ Sports' থেকে 'sports')
                     const cleanGroup = channel.group.toLowerCase();
                     const cleanTarget = currentSelectedCategory.toLowerCase();
                     return matchesSearch && cleanGroup.includes(cleanTarget);
@@ -652,6 +637,17 @@
         const video = document.getElementById('video');
         let hlsPlayer = null;
 
+        // লোডিং স্পীড বাড়ানোর জন্য ফাস্ট বাফারিং এবং লেটেন্সি টিউনিং কনফিগারেশন
+        const fastHlsConfig = {
+            enableWorker: true,                  // ব্যাকগ্রাউন্ড থ্রেড রান করবে স্পীড বাড়াতে
+            maxBufferLength: 6,                  // সর্বোচ্চ ৬ সেকেন্ডের ডাটা আগে স্টোর করবে (ডিফল্ট ৩০ সেকেন্ড থাকে, যা স্লো করে)
+            maxMaxBufferLength: 10,
+            liveSyncDuration: 2.0,               // লাইভ ব্রডকাস্টের মাত্র ২ সেকেন্ড পেছনে থাকবে (একদম রিয়েলটাইম)
+            liveMaxLatencyDuration: 4.0,         
+            maxBufferSize: 10 * 1000 * 1000,     // ১০ মেগাবাইট বাফার সাইজ লিমিট
+            lowLatencyMode: true                 // লো-লেটেন্সি মোড অ্যাক্টিভ (ফাস্ট স্টার্টআপ)
+        };
+
         function playLiveStream(url, name) {
             const badgeOverlay = document.getElementById('player-badge-overlay');
             document.getElementById('current-channel-title').innerText = name;
@@ -670,7 +666,8 @@
             if (hlsPlayer) hlsPlayer.destroy();
 
             if (Hls.isSupported()) {
-                hlsPlayer = new Hls();
+                // এখানে নতুন ফাস্ট কনফিগারেশন যোগ করা হয়েছে
+                hlsPlayer = new Hls(fastHlsConfig);
                 hlsPlayer.loadSource(url);
                 hlsPlayer.attachMedia(video);
                 hlsPlayer.on(Hls.Events.MANIFEST_PARSED, function() {
