@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SA IPTV BD LIVE</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link class="cdn-link" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     
     <style>
@@ -290,7 +290,7 @@
             align-items: center;
             gap: 12px;
             cursor: pointer;
-            transition: 0.3s;
+            transition: transform 0.2s, background-color 0.2s;
             overflow: hidden;
             position: relative;
         }
@@ -300,7 +300,6 @@
             border-color: #ff0022;
         }
 
-        /* বর্তমানে যে চ্যানেলটি প্লে হচ্ছে তার স্পেশাল ডিজাইন */
         .channel-card.currently-playing {
             border-color: #ff0022;
             background-color: #1e1115;
@@ -362,6 +361,15 @@
             text-align: center;
             padding: 20px;
             color: #888;
+        }
+
+        .no-results-msg {
+            grid-column: span 2;
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            font-size: 14px;
+            display: none;
         }
 
         .app-footer {
@@ -505,6 +513,7 @@
                 <section class="channels-grid" id="channels-container">
                     <div class="loading-text"><i class="fa-solid fa-spinner fa-spin"></i> Loading channels...</div>
                 </section>
+                <div id="no-results" class="no-results-msg">No channels found matching the criteria.</div>
 
                 <footer class="app-footer">
                     <p>© 2026 SA IPTV BD LIVE</p>
@@ -519,7 +528,8 @@
     <script>
         let currentSelectedCategory = "ALL"; 
         let badgeTimeout = null;
-        let currentPlayingUrl = ""; // বর্তমানে কোন URL চলছে তা ট্র্যাক করার গ্লোবাল ভ্যারিয়েবল
+        let currentPlayingUrl = ""; 
+        let allChannels = [];
 
         function updateClock() {
             const now = new Date();
@@ -535,7 +545,6 @@
         updateClock();
 
         const m3uUrl = "https://raw.githubusercontent.com/ahmedstore75/StreamBangla/main/BDIX-Playlist.m3u";
-        let allChannels = [];
 
         async function loadM3UPlaylist() {
             try {
@@ -583,12 +592,46 @@
                 }
             }
             
-            filterChannels(); 
+            // সব চ্যানেলকে মাত্র একবারের জন্য HTML হিসেবে জেনারেট করে রেখে দেওয়া হচ্ছে
+            buildInitialDOMChannels(); 
 
-            // একদম প্রথমে অ্যাপ রান করলে কেবল প্রথম চ্যানেলটি প্লে হবে
+            // একদম প্রথমবার ফার্স্ট চ্যানেল অটো-প্লে
             if (allChannels.length > 0 && currentPlayingUrl === "") {
                 playLiveStream(allChannels[0].url, allChannels[0].name);
             }
+        }
+
+        // সম্পূর্ণ নতুন সেফ মেথড: ডাটা কেবল একবার জেনারেট হবে
+        function buildInitialDOMChannels() {
+            const container = document.getElementById('channels-container');
+            container.innerHTML = "";
+
+            allChannels.forEach((channel, index) => {
+                const serialNum = String(index + 1).padStart(2, '0');
+                const card = document.createElement('div');
+                
+                card.className = 'channel-card';
+                // ফিল্টারিং এর সুবিধার জন্য ডাটা অ্যাট্রিবিউট সেট করা হলো
+                card.setAttribute('data-url', channel.url);
+                card.setAttribute('data-name', channel.name.toLowerCase());
+                card.setAttribute('data-group', channel.group.toLowerCase());
+                
+                card.onclick = () => playLiveStream(channel.url, channel.name);
+
+                const logoHtml = channel.logo ? `<img src="${channel.logo}" alt="" class="channel-thumb">` : `<div class="channel-thumb"><i class="fa-solid fa-tv"></i></div>`;
+                
+                card.innerHTML = `
+                    ${logoHtml}
+                    <div class="channel-info">
+                        <h4>${serialNum} | ${channel.name}</h4>
+                        <p class="cat-name">${channel.group}</p>
+                    </div>
+                    <div class="status-box"><i class="fa-solid fa-play play-icon"></i></div>
+                `;
+                container.appendChild(card);
+            });
+            
+            filterChannels();
         }
 
         function syncCategory(categoryName, element) {
@@ -604,58 +647,44 @@
             const matchedBtn = Array.from(catButtons).find(btn => btn.getAttribute('data-cat') === categoryName);
             if(matchedBtn) matchedBtn.classList.add('active');
 
-            filterChannels(); // কেবল নিচের গ্রিড চেঞ্জ করবে, মেইন প্লেয়ারকে টাচ করবে না।
+            filterChannels(); // মোটেও প্লেয়ার বন্ধ হবে না কারণ innerHTML খালি হচ্ছে না।
         }
 
+        // আলটিমেট CSS ফিল্টারিং মেথড (একদম হাই-স্পিড ও নিরাপদ)
         function filterChannels() {
             const searchQuery = document.getElementById('search').value.toLowerCase();
-            const filtered = allChannels.filter(channel => {
-                const matchesSearch = channel.name.toLowerCase().includes(searchQuery);
+            const cards = document.querySelectorAll('.channel-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const cardName = card.getAttribute('data-name');
+                const cardGroup = card.getAttribute('data-group');
+                
+                const matchesSearch = cardName.includes(searchQuery);
+                let matchesCategory = false;
+
                 if (currentSelectedCategory === "ALL") {
-                    return matchesSearch;
+                    matchesCategory = true;
                 } else {
-                    const cleanGroup = channel.group.toLowerCase();
-                    const cleanTarget = currentSelectedCategory.toLowerCase();
-                    return matchesSearch && cleanGroup.includes(cleanTarget);
+                    matchesCategory = cardGroup.includes(currentSelectedCategory.toLowerCase());
+                }
+
+                // CSS display প্রপার্টি দিয়ে হাইড/শো করা হচ্ছে (DOM ডিলিট হচ্ছে না)
+                if (matchesSearch && matchesCategory) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
                 }
             });
-            displayChannels(filtered);
-        }
 
-        function displayChannels(channels) {
-            const container = document.getElementById('channels-container');
-            container.innerHTML = "";
-
-            if (channels.length === 0) {
-                container.innerHTML = `<div class="loading-text">No channels found in this category.</div>`;
-                return;
+            // নো রেজাল্ট মেসেজ শো/হাইড
+            const noResults = document.getElementById('no-results');
+            if (visibleCount === 0) {
+                noResults.style.display = 'block';
+            } else {
+                noResults.style.display = 'none';
             }
-
-            channels.forEach((channel, index) => {
-                const serialNum = String(index + 1).padStart(2, '0');
-                const card = document.createElement('div');
-                
-                // যদি এই কার্ডের URL বর্তমানে চলতে থাকা URL এর সাথে মিলে যায়
-                const isPlaying = (channel.url === currentPlayingUrl);
-                
-                card.className = `channel-card ${isPlaying ? 'currently-playing' : ''}`;
-                card.onclick = () => playLiveStream(channel.url, channel.name);
-
-                const logoHtml = channel.logo ? `<img src="${channel.logo}" alt="" class="channel-thumb">` : `<div class="channel-thumb"><i class="fa-solid fa-tv"></i></div>`;
-                
-                // চলমান চ্যানেলের ডানপাশে প্লে আইকনের বদলে NOW PLAYING টেক্সট দেখাবে
-                const statusIconHtml = isPlaying ? `<span class="playing-badge-text">LIVE</span>` : `<i class="fa-solid fa-play play-icon"></i>`;
-
-                card.innerHTML = `
-                    ${logoHtml}
-                    <div class="channel-info">
-                        <h4>${serialNum} | ${channel.name}</h4>
-                        <p class="cat-name">${channel.group}</p>
-                    </div>
-                    ${statusIconHtml}
-                `;
-                container.appendChild(card);
-            });
         }
 
         const video = document.getElementById('video');
@@ -673,12 +702,12 @@
         };
 
         function playLiveStream(url, name) {
-            // যদি ব্যবহারকারী একই চ্যানেলে আবার ক্লিক করে, তবে রিলোড না করে চলতে দেওয়া হবে
+            // যদি একই চ্যানেল পুনরায় ক্লিক হয়, তবে রিলোড প্রজেক্ট আটকে দেওয়া হবে
             if (currentPlayingUrl === url && hlsPlayer) {
                 return; 
             }
 
-            currentPlayingUrl = url; // বর্তমানে চলমান মেমোরি আপডেট
+            currentPlayingUrl = url; 
 
             const badgeOverlay = document.getElementById('player-badge-overlay');
             document.getElementById('current-channel-title').innerText = name;
@@ -724,12 +753,24 @@
                 });
             }
 
-            // চ্যানেল গ্রিডে 'Currently Playing' এর লাল বর্ডার আপডেট করার জন্য কল করা হলো
+            // বর্তমানে বাজতে থাকা চ্যানেলের বর্ডার এবং টেক্সট লাইভ আপডেট
+            updatePlayingCardUI();
+        }
+
+        function updatePlayingCardUI() {
             const cards = document.querySelectorAll('.channel-card');
-            cards.forEach(card => card.classList.remove('currently-playing'));
-            
-            // বর্তমান লিস্ট রি-রেন্ডার করে স্ট্যাটাস আপডেট করা
-            filterChannels();
+            cards.forEach(card => {
+                const cardUrl = card.getAttribute('data-url');
+                const statusBox = card.querySelector('.status-box');
+                
+                if (cardUrl === currentPlayingUrl) {
+                    card.classList.add('currently-playing');
+                    if(statusBox) statusBox.innerHTML = `<span class="playing-badge-text">LIVE</span>`;
+                } else {
+                    card.classList.remove('currently-playing');
+                    if(statusBox) statusBox.innerHTML = `<i class="fa-solid fa-play play-icon"></i>`;
+                }
+            });
         }
 
         window.onload = loadM3UPlaylist;
