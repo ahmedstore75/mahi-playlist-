@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SA IPTV BD LIVE</title>
+    <!-- Font Awesome Icons (Reliable CDN for GitHub) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Hls.js Library for M3U Streaming -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     
     <style>
@@ -414,6 +416,7 @@
 
     <div class="app-container">
         
+        <!-- SIDEBAR NAVIGATION -->
         <aside class="sidebar">
             <div class="logo-section">
                 <h1>SA IPTV <br><span>BD LIVE</span></h1>
@@ -421,20 +424,21 @@
             
             <nav class="nav-menu" id="sidebar-menu">
                 <a onclick="syncCategory('ALL', this)" class="nav-item active" data-cat="ALL"><i class="fa-solid fa-border-all"></i> ALL CHANNELS</a>
-                <a onclick="syncCategory('🇧🇩 Bangla', this)" class="nav-item" data-cat="🇧🇩 Bangla"><i class="fa-solid fa-tv"></i> BANGLA</a>
-                <a onclick="syncCategory('📰 News', this)" class="nav-item" data-cat="📰 News"><i class="fa-solid fa-newspaper"></i> NEWS</a>
-                <a onclick="syncCategory('⚽ Sports', this)" class="nav-item" data-cat="⚽ Sports"><i class="fa-solid fa-trophy"></i> SPORTS</a>
-                <a onclick="syncCategory('🎬 Movies', this)" class="nav-item" data-cat="🎬 Movies"><i class="fa-solid fa-film"></i> MOVIES</a>
-                <a onclick="syncCategory('🎞 Series', this)" class="nav-item" data-cat="🎞 Series"><i class="fa-solid fa-clapperboard"></i> SERIES</a>
-                <a onclick="syncCategory('🎵 Music', this)" class="nav-item" data-cat="🎵 Music"><i class="fa-solid fa-music"></i> MUSIC</a>
-                <a onclick="syncCategory('👶 Kids', this)" class="nav-item" data-cat="👶 Kids"><i class="fa-solid fa-child"></i> KIDS</a>
-                <a onclick="syncCategory('🕌 Islamic', this)" class="nav-item" data-cat="🕌 Islamic"><i class="fa-solid fa-mosque"></i> ISLAMIC</a>
-                <a onclick="syncCategory('🌍 International', this)" class="nav-item" data-cat="🌍 International"><i class="fa-solid fa-globe"></i> GLOBAL</a>
-                <a onclick="syncCategory('🎓 Education', this)" class="nav-item" data-cat="🎓 Education"><i class="fa-solid fa-graduation-cap"></i> EDUCATION</a>
-                <a onclick="syncCategory('🎥 VOD', this)" class="nav-item" data-cat="🎥 VOD"><i class="fa-solid fa-video"></i> VOD</a>
-                <a onclick="syncCategory('⭐ Favorites', this)" class="nav-item" data-cat="⭐ Favorites"><i class="fa-solid fa-heart"></i> FAVORITES</a>
+                <a onclick="syncCategory('Bangla', this)" class="nav-item" data-cat="Bangla"><i class="fa-solid fa-tv"></i> BANGLA</a>
+                <a onclick="syncCategory('News', this)" class="nav-item" data-cat="News"><i class="fa-solid fa-newspaper"></i> NEWS</a>
+                <a onclick="syncCategory('Sports', this)" class="nav-item" data-cat="Sports"><i class="fa-solid fa-trophy"></i> SPORTS</a>
+                <a onclick="syncCategory('Movies', this)" class="nav-item" data-cat="Movies"><i class="fa-solid fa-film"></i> MOVIES</a>
+                <a onclick="syncCategory('Series', this)" class="nav-item" data-cat="Series"><i class="fa-solid fa-clapperboard"></i> SERIES</a>
+                <a onclick="syncCategory('Music', this)" class="nav-item" data-cat="Music"><i class="fa-solid fa-music"></i> MUSIC</a>
+                <a onclick="syncCategory('Kids', this)" class="nav-item" data-cat="Kids"><i class="fa-solid fa-child"></i> KIDS</a>
+                <a onclick="syncCategory('Islamic', this)" class="nav-item" data-cat="Islamic"><i class="fa-solid fa-mosque"></i> ISLAMIC</a>
+                <a onclick="syncCategory('International', this)" class="nav-item" data-cat="International"><i class="fa-solid fa-globe"></i> GLOBAL</a>
+                <a onclick="syncCategory('Education', this)" class="nav-item" data-cat="Education"><i class="fa-solid fa-graduation-cap"></i> EDUCATION</a>
+                <a onclick="syncCategory('VOD', this)" class="nav-item" data-cat="VOD"><i class="fa-solid fa-video"></i> VOD</a>
+                <a onclick="syncCategory('Favorites', this)" class="nav-item" data-cat="Favorites"><i class="fa-solid fa-heart"></i> FAVORITES</a>
             </nav>
 
+            <!-- সোশ্যাল লিঙ্ক সেকশন -->
             <div class="social-links">
                 <a href="https://www.facebook.com/ahmed.bd.fb" target="_blank"><i class="fa-brands fa-facebook"></i></a>
                 <a href="https://telegram.org" target="_blank"><i class="fa-brands fa-telegram"></i></a>
@@ -442,8 +446,10 @@
             </div>
         </aside>
 
+        <!-- MAIN CONTENT AREA -->
         <main class="main-content">
             
+            <!-- TOP BAR -->
             <header class="top-header">
                 <div class="time-widget">
                     <i class="fa-regular fa-clock" style="color: #ff0022; margin-right: 5px;"></i> <span id="clock">--:-- --</span><br>
@@ -451,6 +457,7 @@
                 </div>
             </header>
 
+            <!-- VIDEO PLAYER -->
             <section class="player-container">
                 <div class="video-wrapper">
                     <div class="player-overlay-top" id="player-badge-overlay">
@@ -460,8 +467,10 @@
                 </div>
             </section>
 
+            <!-- স্ক্রলেবল কন্টেন্ট এরিয়া -->
             <div class="scrollable-content-area">
                 
+                <!-- CATEGORIES & SEARCH -->
                 <section class="category-section">
                     <div class="cat-header">
                         <h3>Categories</h3>
@@ -473,25 +482,27 @@
                     
                     <div class="category-tags" id="category-buttons-container">
                         <button class="cat-btn active" data-cat="ALL" onclick="syncCategory('ALL', this)">ALL</button>
-                        <button class="cat-btn" data-cat="🇧🇩 Bangla" onclick="syncCategory('🇧🇩 Bangla', this)">🇧🇩 Bangla</button>
-                        <button class="cat-btn" data-cat="📰 News" onclick="syncCategory('📰 News', this)">📰 News</button>
-                        <button class="cat-btn" data-cat="⚽ Sports" onclick="syncCategory('⚽ Sports', this)">⚽ Sports</button>
-                        <button class="cat-btn" data-cat="🎬 Movies" onclick="syncCategory('🎬 Movies', this)">🎬 Movies</button>
-                        <button class="cat-btn" data-cat="🎞 Series" onclick="syncCategory('🎞 Series', this)">🎞 Series</button>
-                        <button class="cat-btn" data-cat="🎵 Music" onclick="syncCategory('🎵 Music', this)">🎵 Music</button>
-                        <button class="cat-btn" data-cat="👶 Kids" onclick="syncCategory('👶 Kids', this)">👶 Kids</button>
-                        <button class="cat-btn" data-cat="🕌 Islamic" onclick="syncCategory('🕌 Islamic', this)">🕌 Islamic</button>
-                        <button class="cat-btn" data-cat="🌍 International" onclick="syncCategory('🌍 International', this)">🌍 International</button>
-                        <button class="cat-btn" data-cat="🎓 Education" onclick="syncCategory('🎓 Education', this)">🎓 Education</button>
-                        <button class="cat-btn" data-cat="🎥 VOD" onclick="syncCategory('🎥 VOD', this)">🎥 VOD</button>
-                        <button class="cat-btn" data-cat="⭐ Favorites" onclick="syncCategory('⭐ Favorites', this)">⭐ Favorites</button>
+                        <button class="cat-btn" data-cat="Bangla" onclick="syncCategory('Bangla', this)">🇧🇩 Bangla</button>
+                        <button class="cat-btn" data-cat="News" onclick="syncCategory('News', this)">📰 News</button>
+                        <button class="cat-btn" data-cat="Sports" onclick="syncCategory('Sports', this)">⚽ Sports</button>
+                        <button class="cat-btn" data-cat="Movies" onclick="syncCategory('Movies', this)">🎬 Movies</button>
+                        <button class="cat-btn" data-cat="Series" onclick="syncCategory('Series', this)">🎞 Series</button>
+                        <button class="cat-btn" data-cat="Music" onclick="syncCategory('Music', this)">🎵 Music</button>
+                        <button class="cat-btn" data-cat="Kids" onclick="syncCategory('Kids', this)">👶 Kids</button>
+                        <button class="cat-btn" data-cat="Islamic" onclick="syncCategory('Islamic', this)">🕌 Islamic</button>
+                        <button class="cat-btn" data-cat="International" onclick="syncCategory('International', this)">🌍 International</button>
+                        <button class="cat-btn" data-cat="Education" onclick="syncCategory('Education', this)">🎓 Education</button>
+                        <button class="cat-btn" data-cat="VOD" onclick="syncCategory('VOD', this)">🎥 VOD</button>
+                        <button class="cat-btn" data-cat="Favorites" onclick="syncCategory('Favorites', this)">⭐ Favorites</button>
                     </div>
                 </section>
 
+                <!-- CHANNELS GRID -->
                 <section class="channels-grid" id="channels-container">
                     <div class="loading-text"><i class="fa-solid fa-spinner fa-spin"></i> Loading channels...</div>
                 </section>
 
+                <!-- FOOTER -->
                 <footer class="app-footer">
                     <p>© 2026 SA IPTV BD LIVE</p>
                     <p>Built with <span style="color: red;">&hearts;</span></p>
@@ -502,6 +513,7 @@
         </main>
     </div>
 
+    <!-- JAVASCRIPT FOR DYNAMIC M3U, FILTER & STREAMING -->
     <script>
         let currentSelectedCategory = "ALL"; 
         let badgeTimeout = null;
@@ -519,7 +531,6 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // নতুন মেইন M3U প্লেলিস্ট URL এখানে আপডেট করা হয়েছে
         const m3uUrl = "https://raw.githubusercontent.com/ahmedstore75/StreamBangla/main/BDIX-Playlist.m3u";
         let allChannels = [];
 
@@ -575,6 +586,7 @@
             }
         }
 
+        // স্মার্ট গ্লোবাল সিঙ্ক ফাংশন
         function syncCategory(categoryName, element) {
             currentSelectedCategory = categoryName;
 
@@ -591,6 +603,7 @@
             filterChannels();
         }
 
+        // রিয়েলটাইম ফাজি বা ইনক্লুসিভ ক্যাটাগরি ফিল্টারিং (ইমোজি ফিক্সড)
         function filterChannels() {
             const searchQuery = document.getElementById('search').value.toLowerCase();
             const filtered = allChannels.filter(channel => {
@@ -598,7 +611,10 @@
                 if (currentSelectedCategory === "ALL") {
                     return matchesSearch;
                 } else {
-                    return matchesSearch && (channel.group === currentSelectedCategory);
+                    // এটি ইমোজি বাদ দিয়ে শুধু লেখা ম্যাচ করবে (যেমন: '⚽ Sports' থেকে 'sports')
+                    const cleanGroup = channel.group.toLowerCase();
+                    const cleanTarget = currentSelectedCategory.toLowerCase();
+                    return matchesSearch && cleanGroup.includes(cleanTarget);
                 }
             });
             displayChannels(filtered);
